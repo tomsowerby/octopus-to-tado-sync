@@ -1,0 +1,33 @@
+name: Sync Tado-Octopus Rates Script
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Runs every day at 12pm UTC
+    - cron: '0 12 * * *'
+
+jobs:
+  run_script:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.x'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: Run Python script
+      run: |
+        python sync_octopus_tado_rates.py \
+          --tado-email "${{ secrets.TADO_EMAIL }}" \
+          --tado-password "${{ secrets.TADO_PASSWORD }}" \
+          --short-code "${{ secrets.OCTOPUS_SHORT_CODE }}" \
+          --long-code "${{ secrets.OCTOPUS_LONG_CODE }}" \
+          --octopus-api-key "${{ secrets.OCTOPUS_API_KEY }}"

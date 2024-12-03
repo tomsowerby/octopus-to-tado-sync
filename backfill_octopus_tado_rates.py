@@ -24,7 +24,7 @@ def get_meter_reading_rates(api_key, short_code, long_code):
             url = rates_data.get("next", "")
             count = count + 1
 
-            if count > 3:
+            if count > 5:
                 break
         else:
             print(
@@ -32,7 +32,6 @@ def get_meter_reading_rates(api_key, short_code, long_code):
             )
             break
 
-    print(f"All rates {rates}")
     return rates
 
 

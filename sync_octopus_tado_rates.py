@@ -25,7 +25,6 @@ def get_meter_reading_rates(api_key, mprn, gas_serial_number):
         )
         break
 
-    print(f"All rates {rates}")
     return rates
 
 
