@@ -39,7 +39,7 @@ def send_rate_to_tado(username, password, valid_from, valid_to, rate):
         to_date=valid_to,
         is_period=True,
         tariff=rate,
-        unit="kwh"
+        unit="kWh"
     )
     print(result)
 
