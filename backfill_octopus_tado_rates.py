@@ -2,6 +2,7 @@ import argparse
 import requests
 from requests.auth import HTTPBasicAuth
 from PyTado.interface import Tado
+from dateutil import parser
 
 
 def get_meter_reading_rates(api_key, short_code, long_code):
@@ -85,10 +86,9 @@ if __name__ == "__main__":
     )
 
     for rate in rates:
-        print(rate["valid_from"])
-        print(rate["valid_to"])
-        print(rate["value_inc_vat"])
-        send_rate_to_tado(args.tado_email, args.tado_password, rate["valid_from"], rate["valid_to"], rate["value_inc_vat"])
+        date_from = datetime.datetime.fromisoformat(rate["valid_from"]).strftime("%Y-%m-%d")
+        date_to = datetime.datetime.fromisoformat(rate["valid_to"]).strftime("%Y-%m-%d")
+        send_rate_to_tado(args.tado_email, args.tado_password, date_from, date_to, rate["value_inc_vat"])
 
     # Send the total consumption to Tado
     # send_reading_to_tado(args.tado_email, args.tado_password, consumption)
