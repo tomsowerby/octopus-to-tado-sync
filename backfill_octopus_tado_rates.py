@@ -1,5 +1,6 @@
 import argparse
 import requests
+import datetime
 from requests.auth import HTTPBasicAuth
 from PyTado.interface import Tado
 
