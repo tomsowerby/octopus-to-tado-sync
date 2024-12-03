@@ -4,11 +4,11 @@ from requests.auth import HTTPBasicAuth
 from PyTado.interface import Tado
 
 
-def get_meter_reading_total_consumption(api_key, short_code, long_code):
+def get_meter_reading_rates(api_key, short_code, long_code):
     """
     Retrieves all rates from the Octopus Energy API for the given gas product.
     """
-    url = f"https://api.octopus.energy/v1/products/{short_code}/gas-tariffs/{full_code}/standard-unit-rates/"
+    url = f"https://api.octopus.energy/v1/products/{short_code}/gas-tariffs/{long_code}/standard-unit-rates/"
     rates = []
     count = 0
 
@@ -82,7 +82,7 @@ if __name__ == "__main__":
     args = parse_args()
 
     # Get total consumption from Octopus Energy API
-    rates = get_meter_reading_total_consumption(
+    rates = get_meter_reading_rates(
         args.octopus_api_key, args.short_code, args.long_code
     )
 
