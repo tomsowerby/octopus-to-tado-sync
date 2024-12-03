@@ -4,7 +4,7 @@ from requests.auth import HTTPBasicAuth
 from PyTado.interface import Tado
 
 
-def get_meter_reading_rates(api_key, mprn, gas_serial_number):
+def get_meter_reading_rates(api_key, short_code, long_code):
     """
     Retrieves all rates from the Octopus Energy API for the given gas product.
     """
