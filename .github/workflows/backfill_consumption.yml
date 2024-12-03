@@ -22,7 +22,7 @@ jobs:
 
     - name: Run Python script
       run: |
-        python backfill_by_week.py \
+        python backfill_by_day.py \
           --tado-email "${{ secrets.TADO_EMAIL }}" \
           --tado-password "${{ secrets.TADO_PASSWORD }}" \
           --mprn "${{ secrets.OCTOPUS_MPRN }}" \
