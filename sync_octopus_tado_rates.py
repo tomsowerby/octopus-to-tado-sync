@@ -9,7 +9,7 @@ def get_meter_reading_rates(api_key, short_code, long_code):
     Retrieves all rates from the Octopus Energy API for the given gas product.
     """
     url = f"https://api.octopus.energy/v1/products/{short_code}/gas-tariffs/{long_code}/standard-unit-rates/"
-    rate = null
+    rates = []
 
     response = requests.get(
         url, auth=HTTPBasicAuth(api_key, "")
