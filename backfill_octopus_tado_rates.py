@@ -19,9 +19,8 @@ def get_meter_reading_rates(api_key, short_code, long_code):
 
         if response.status_code == 200:
             rates_data = response.json()
-            total_consumption += sum(
-                rates = rates + rates_data["results"]
-            )
+            rates = rates + rates_data["results"]
+
             url = rates_data.get("next", "")
             count = count + 1
 
