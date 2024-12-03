@@ -24,8 +24,8 @@ def get_meter_reading_rates(api_key, short_code, long_code):
             url = rates_data.get("next", "")
             count = count + 1
 
-            if count > 5:
-                url = null
+            if count > 3:
+                break
         else:
             print(
                 f"Failed to retrieve data. Status code: {response.status_code}, Message: {response.text}"
