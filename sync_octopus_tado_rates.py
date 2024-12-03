@@ -23,7 +23,6 @@ def get_meter_reading_rates(api_key, mprn, gas_serial_number):
         print(
             f"Failed to retrieve data. Status code: {response.status_code}, Message: {response.text}"
         )
-        break
 
     return rates
 
