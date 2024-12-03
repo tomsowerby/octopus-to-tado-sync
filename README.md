@@ -41,6 +41,8 @@ Tado account and Octopus Energy API. This is done through GitHub secrets.
 | `OCTOPUS_MPRN`           | Your gas MPRN (Meter Point Reference Number).                 |
 | `OCTOPUS_GAS_SERIAL`     | The serial number of your gas meter.                          |
 | `OCTOPUS_API_KEY`        | Your Octopus Energy API key. You can obtain this from the Octopus Energy developer portal (details below). |
+| `OCTOPUS_SHORT_CODE`     | The short code of your gas tariff. Usually just the long region-specific code with some letters removed from start and end.                          |
+| `OCTOPUS_LONG_CODE`        | The long code of your gas tariff. This is region specific. |
 
 ### 3. Obtain Your Octopus Energy Details
 
