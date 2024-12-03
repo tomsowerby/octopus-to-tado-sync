@@ -2,7 +2,6 @@ import argparse
 import requests
 from requests.auth import HTTPBasicAuth
 from PyTado.interface import Tado
-from pprint import pprint
 
 def get_meter_reading_total_consumption(api_key, mprn, gas_serial_number):
     """

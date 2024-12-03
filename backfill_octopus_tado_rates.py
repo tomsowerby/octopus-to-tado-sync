@@ -2,7 +2,6 @@ import argparse
 import requests
 from requests.auth import HTTPBasicAuth
 from PyTado.interface import Tado
-from dateutil import parser
 
 
 def get_meter_reading_rates(api_key, short_code, long_code):
