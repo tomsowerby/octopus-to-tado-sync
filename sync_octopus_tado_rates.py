@@ -36,10 +36,10 @@ def send_rate_to_tado(username, password, valid_from, valid_to, rate):
     """
     tado = Tado(username, password)
     result = tado.set_eiq_tariff(
-        from_date=valid_from
-        to_date=valid_to
-        is_period=True
-        tariff=rate
+        from_date=valid_from,
+        to_date=valid_to,
+        is_period=True,
+        tariff=rate,
         unit="kwh"
     )
     print(result)
