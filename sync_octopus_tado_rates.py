@@ -79,7 +79,9 @@ if __name__ == "__main__":
 
     for rate in rates:
         date_from = datetime.datetime.fromisoformat(rate["valid_from"]).strftime("%Y-%m-%d")
-        date_to = datetime.datetime.fromisoformat(rate["valid_to"]).strftime("%Y-%m-%d")
+        date_to = datetime.datetime.fromisoformat(rate["valid_to"])
+        date_to = date_to - datetime.timedelta(days=1)
+        date_to = date_to.strftime("%Y-%m-%d")
         send_rate_to_tado(args.tado_email, args.tado_password, date_from, date_to, rate["value_inc_vat"])
         break
 
