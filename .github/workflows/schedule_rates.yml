@@ -3,7 +3,7 @@ name: Sync Tado-Octopus Rates Script
 on:
   workflow_dispatch:
   schedule:
-    # Runs every day at 12pm UTC
+    # Runs every day at 1am UTC
     - cron: '0 1 * * *'
 
 jobs:
