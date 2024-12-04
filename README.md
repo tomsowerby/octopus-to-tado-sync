@@ -10,9 +10,9 @@ from Octopus Energy.
 
 ## Features
 
-- Automatically pulls your gas usage data from Octopus Energy.
+- Automatically pulls your gas usage data and gas rates from Octopus Energy.
 - Syncs the data with Tado Energy IQ for better home energy management insights.
-- Set up once, and it runs weekly via GitHub Actions.
+- Set up once, and it runs daily via GitHub Actions.
 
 ## Setup Instructions
 
@@ -59,7 +59,7 @@ section.
 These details are necessary to allow the script to pull your gas usage data from
 Octopus Energy.
 
-### 4. Enable the Workflow
+### 4. Enable the Workflows
 
 The repository is already set up with a GitHub Actions workflow that runs the
 sync script once a week. The workflow is located at
