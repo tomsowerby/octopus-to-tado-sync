@@ -1,5 +1,6 @@
 import argparse
 import requests
+from datetime import datetime
 from requests.auth import HTTPBasicAuth
 from PyTado.interface import Tado
 
@@ -7,7 +8,8 @@ def get_meter_reading_total_consumption(api_key, mprn, gas_serial_number):
     """
     Retrieves total gas consumption from the Octopus Energy API for the given gas meter point and serial number.
     """
-    url = f"https://api.octopus.energy/v1/gas-meter-points/{mprn}/meters/{gas_serial_number}/consumption/?group_by=day&order_by=period"
+    period_from = datetime(2025, 3, 3, 0, 0, 0)
+    url = f"https://api.octopus.energy/v1/gas-meter-points/{mprn}/meters/{gas_serial_number}/consumption/?group_by=day&order_by=period&period_from={period_from.isoformat()}Z"
     consumption = []
 
     while url:
