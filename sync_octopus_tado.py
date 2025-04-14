@@ -1,7 +1,7 @@
 import argparse
 import asyncio
 import requests
-from datetime import datetime
+from datetime import datetime, timedelta
 from requests.auth import HTTPBasicAuth
 from playwright.async_api import async_playwright
 from PyTado.interface import Tado
@@ -138,9 +138,9 @@ def send_reading_to_tado(username, password, reading, rates):
     print(result)
 
     for rate in rates:
-        date_from = datetime.datetime.fromisoformat(rate["valid_from"]).strftime("%Y-%m-%d")
-        date_to = datetime.datetime.fromisoformat(rate["valid_to"])
-        date_to = date_to - datetime.timedelta(days=1)
+        date_from = datetime.fromisoformat(rate["valid_from"]).strftime("%Y-%m-%d")
+        date_to = datetime.fromisoformat(rate["valid_to"])
+        date_to = date_to - timedelta(days=1)
         date_to = date_to.strftime("%Y-%m-%d")
         send_rate_to_tado(tado, date_from, date_to, rate["value_inc_vat"])
         break
