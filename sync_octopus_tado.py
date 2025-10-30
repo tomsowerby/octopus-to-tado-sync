@@ -33,6 +33,7 @@ def get_meter_reading_total_consumption(api_key, mprn, gas_serial_number):
     print(f"Total consumption is {total_consumption}")
     return total_consumption
 
+
 def get_gas_rates(api_key, short_code, long_code):
     """
     Retrieves all rates from the Octopus Energy API for the given gas product.
@@ -40,9 +41,7 @@ def get_gas_rates(api_key, short_code, long_code):
     url = f"https://api.octopus.energy/v1/products/{short_code}/gas-tariffs/{long_code}/standard-unit-rates/"
     rates = []
 
-    response = requests.get(
-        url, auth=HTTPBasicAuth(api_key, "")
-    )
+    response = requests.get(url, auth=HTTPBasicAuth(api_key, ""))
 
     if response.status_code == 200:
         rates_data = response.json()
@@ -113,6 +112,7 @@ def tado_login(username, password):
 
     return tado
 
+
 def send_rate_to_tado(tado, valid_from, valid_to, rate):
     """
     Sends the total consumption reading to Tado using its Energy IQ feature.
@@ -122,7 +122,7 @@ def send_rate_to_tado(tado, valid_from, valid_to, rate):
         to_date=valid_to,
         is_period=True,
         tariff=(rate / 100),
-        unit="kWh"
+        unit="kWh",
     )
     print(result)
 
@@ -169,7 +169,6 @@ def parse_args():
     )
     parser.add_argument("--octopus-api-key", required=True, help="Octopus API key")
 
-
     # Octopus API Gas Rate arguments
     parser.add_argument(
         "--short-code",
@@ -177,7 +176,9 @@ def parse_args():
         help="Short Product Code for your product, usually the same as the long one with some digits removed from start and end",
     )
     parser.add_argument(
-        "--long-code", required=True, help="Long Product Code shown on your account API data"
+        "--long-code",
+        required=True,
+        help="Long Product Code shown on your account API data",
     )
 
     return parser.parse_args()
@@ -191,9 +192,7 @@ if __name__ == "__main__":
         args.octopus_api_key, args.mprn, args.gas_serial_number
     )
 
-    rates = get_gas_rates(
-        args.octopus_api_key, args.short_code, args.long_code
-    )
+    rates = get_gas_rates(args.octopus_api_key, args.short_code, args.long_code)
 
     # Send the total consumption to Tado
     send_reading_to_tado(args.tado_email, args.tado_password, consumption, rates)
