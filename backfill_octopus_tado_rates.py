@@ -14,9 +14,7 @@ def get_meter_reading_rates(api_key, short_code, long_code):
     count = 0
 
     while url:
-        response = requests.get(
-            url, auth=HTTPBasicAuth(api_key, "")
-        )
+        response = requests.get(url, auth=HTTPBasicAuth(api_key, ""))
 
         if response.status_code == 200:
             rates_data = response.json()
@@ -46,7 +44,7 @@ def send_rate_to_tado(username, password, valid_from, valid_to, rate):
         to_date=valid_to,
         is_period=True,
         tariff=(rate / 100),
-        unit="kWh"
+        unit="kWh",
     )
     print(result)
 
@@ -70,7 +68,9 @@ def parse_args():
         help="Short Product Code for your product, usually the same as the long one with some digits removed from start and end",
     )
     parser.add_argument(
-        "--long-code", required=True, help="Long Product Code shown on your account API data"
+        "--long-code",
+        required=True,
+        help="Long Product Code shown on your account API data",
     )
     parser.add_argument("--octopus-api-key", required=True, help="Octopus API key")
 
@@ -86,11 +86,19 @@ if __name__ == "__main__":
     )
 
     for rate in rates:
-        date_from = datetime.datetime.fromisoformat(rate["valid_from"]).strftime("%Y-%m-%d")
+        date_from = datetime.datetime.fromisoformat(rate["valid_from"]).strftime(
+            "%Y-%m-%d"
+        )
         date_to = datetime.datetime.fromisoformat(rate["valid_to"])
         date_to = date_to - datetime.timedelta(days=1)
         date_to = date_to.strftime("%Y-%m-%d")
-        send_rate_to_tado(args.tado_email, args.tado_password, date_from, date_to, rate["value_inc_vat"])
+        send_rate_to_tado(
+            args.tado_email,
+            args.tado_password,
+            date_from,
+            date_to,
+            rate["value_inc_vat"],
+        )
 
     # Send the total consumption to Tado
     # send_reading_to_tado(args.tado_email, args.tado_password, consumption)
