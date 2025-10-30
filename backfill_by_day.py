@@ -235,11 +235,11 @@ if __name__ == "__main__":
         print(f"Sending {len(consumption)} meter readings to Tado...")
         sum_consumption = 0
         for interval in consumption:
+            sum_consumption += interval["consumption"]
             try:
                 print(
-                    f"Processing: {interval['interval_end']} - Consumption: {interval['consumption']}"
+                    f"Processing: {interval['interval_end']} - Consumption: {interval['consumption']} - Sum: {sum_consumption}"
                 )
-                sum_consumption += interval["consumption"]
                 send_reading_to_tado(tado, interval["interval_end"], sum_consumption)
             except Exception as e:
                 print(
