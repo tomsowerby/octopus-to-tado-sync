@@ -35,5 +35,4 @@ jobs:
           --mprn "$OCTOPUS_MPRN" \
           --gas-serial-number "$OCTOPUS_GAS_SERIAL" \
           --octopus-api-key "$OCTOPUS_API_KEY" \
-          --octopus-account-number "$OCTOPUS_ACCOUNT_NUMBER" \
-          --update-tariff
+          --octopus-account-number "$OCTOPUS_ACCOUNT_NUMBER"
