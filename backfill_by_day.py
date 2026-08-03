@@ -149,7 +149,9 @@ def send_reading_to_tado(tado, date, reading):
     Sends a meter reading to Tado using its Energy IQ feature.
     """
     try:
-        result = tado.set_eiq_meter_readings(reading=int(reading), date=date)
+        result = tado.set_eiq_meter_readings(
+            reading=round(float(reading), 3), date=date
+        )
         print(f"Reading sent successfully for {date}: {result}")
         return True
     except Exception as e:
