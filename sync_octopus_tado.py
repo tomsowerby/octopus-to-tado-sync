@@ -134,7 +134,7 @@ def send_reading_to_tado(username, password, reading, rates):
 
     tado = tado_login(username=username, password=password)
 
-    result = tado.set_eiq_meter_readings(reading=int(reading))
+    result = tado.set_eiq_meter_readings(reading=round(float(reading), 3))
     print(result)
 
     for rate in rates:
