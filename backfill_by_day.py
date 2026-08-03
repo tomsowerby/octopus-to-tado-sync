@@ -150,7 +150,7 @@ def send_reading_to_tado(tado, date, reading):
     """
     try:
         result = tado.set_eiq_meter_readings(
-            reading=round(float(reading), 3), date=date
+            reading=int(round(reading)), date=date
         )
         print(f"Reading sent successfully for {date}: {result}")
         return True
