@@ -3,8 +3,8 @@ name: Run Tado-Octopus Script
 on:
   workflow_dispatch:
   schedule:
-    # Runs every day at 11pm UTC
-    - cron: '0 23 * * *'
+    # Runs every Wednesday at 12pm UTC
+    - cron: '0 12 * * 3'
 
 jobs:
   run_script:
@@ -34,6 +34,4 @@ jobs:
           --tado-password "${{ secrets.TADO_PASSWORD }}" \
           --mprn "${{ secrets.OCTOPUS_MPRN }}" \
           --gas-serial-number "${{ secrets.OCTOPUS_GAS_SERIAL }}" \
-          --octopus-api-key "${{ secrets.OCTOPUS_API_KEY }}" \
-          --short-code "${{ secrets.OCTOPUS_SHORT_CODE }}" \
-          --long-code "${{ secrets.OCTOPUS_LONG_CODE }}"
+          --octopus-api-key "${{ secrets.OCTOPUS_API_KEY }}"
