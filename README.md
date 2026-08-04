@@ -12,7 +12,8 @@ from Octopus Energy.
 
 - Automatically pulls your gas usage data and gas rates from Octopus Energy.
 - Syncs the data with Tado Energy IQ for better home energy management insights.
-- Set up once, and it runs daily via GitHub Actions.
+- Optionally syncs the current/historical Octopus gas unit tariff into Tado Energy IQ.
+- Set up once, and it runs weekly via GitHub Actions.
 
 ## Setup Instructions
 
@@ -41,8 +42,7 @@ Tado account and Octopus Energy API. This is done through GitHub secrets.
 | `OCTOPUS_MPRN`           | Your gas MPRN (Meter Point Reference Number).                 |
 | `OCTOPUS_GAS_SERIAL`     | The serial number of your gas meter.                          |
 | `OCTOPUS_API_KEY`        | Your Octopus Energy API key. You can obtain this from the Octopus Energy developer portal (details below). |
-| `OCTOPUS_SHORT_CODE`     | The short code of your gas tariff. Usually just the long region-specific code with some letters removed from start and end.                          |
-| `OCTOPUS_LONG_CODE`        | The long code of your gas tariff. This is region specific. |
+| `OCTOPUS_ACCOUNT_NUMBER` | Your Octopus account number. Required only if tariff sync is enabled. |
 
 ### 3. Obtain Your Octopus Energy Details
 
@@ -59,7 +59,11 @@ section.
 These details are necessary to allow the script to pull your gas usage data from
 Octopus Energy.
 
-### 4. Enable the Workflows
+If you want to sync tariffs as well, you will also need your **Octopus account
+number**. The script uses the account endpoint to discover the active gas
+agreement and then fetches the matching unit-rate history.
+
+### 4. Enable the Workflow
 
 The repository is already set up with a GitHub Actions workflow that runs the
 sync script once a week. The workflow is located at
@@ -80,8 +84,9 @@ syntax](https://crontab.guru/) for the desired frequency.
 For example, to run daily at midnight:
 
 ```yaml
-on: schedule:
-    - cron: '0 0 * * *' ```
+on:
+  schedule:
+    - cron: '0 0 * * *'
 ```
 
 ### 6. Monitor the Workflow
@@ -94,11 +99,13 @@ have occurred.
 
 The GitHub Actions workflow automatically runs the following script:
 
-```bash python sync_octopus_tado.py \ --tado-email "${{ secrets.TADO_EMAIL }}" \
---tado-password "${{ secrets.TADO_PASSWORD }}" \ --mprn "${{
-secrets.OCTOPUS_MPRN }}" \ --gas-serial-number "${{ secrets.OCTOPUS_GAS_SERIAL
-}}" \ --octopus-api-key "${{ secrets.OCTOPUS_API_KEY }}"
-
+```bash
+python sync_octopus_tado.py \
+  --tado-email "${{ secrets.TADO_EMAIL }}" \
+  --tado-password "${{ secrets.TADO_PASSWORD }}" \
+  --mprn "${{ secrets.OCTOPUS_MPRN }}" \
+  --gas-serial-number "${{ secrets.OCTOPUS_GAS_SERIAL }}" \
+  --octopus-api-key "${{ secrets.OCTOPUS_API_KEY }}"
 ```
 
 The script will:
@@ -107,6 +114,35 @@ The script will:
 using their API.
 2. Sync these readings with Tado's Energy IQ to keep your gas consumption
 insights up-to-date.
+3. Optionally sync Octopus gas **unit tariff** changes to Tado when
+   `--update-tariff` is passed and `OCTOPUS_ACCOUNT_NUMBER` is configured.
+
+### Optional Tariff Sync
+
+Pass `--update-tariff` to enable tariff sync. When enabled, the script:
+
+1. Reads the latest tariff history already stored in Tado.
+2. Uses the Octopus account API to find the matching gas agreement.
+3. Fetches missing tariff periods from Octopus product tariff endpoints.
+4. Uploads only the missing tariff periods to Tado.
+
+This keeps the workflow stateless and suitable for GitHub Actions.
+
+Example:
+
+```bash
+python sync_octopus_tado.py \
+  --tado-email "$TADO_EMAIL" \
+  --tado-password "$TADO_PASSWORD" \
+  --mprn "$OCTOPUS_MPRN" \
+  --gas-serial-number "$OCTOPUS_GAS_SERIAL" \
+  --octopus-api-key "$OCTOPUS_API_KEY" \
+  --octopus-account-number "$OCTOPUS_ACCOUNT_NUMBER" \
+  --update-tariff
+```
+
+> Note: the current implementation syncs the **gas unit rate** only. Octopus
+> standing charges are not currently pushed into Tado.
 
 ### Troubleshooting
 
