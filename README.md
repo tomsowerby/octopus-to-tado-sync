@@ -10,7 +10,7 @@ from Octopus Energy.
 
 ## Features
 
-- Automatically pulls your gas usage data from Octopus Energy.
+- Automatically pulls your gas usage data and gas rates from Octopus Energy.
 - Syncs the data with Tado Energy IQ for better home energy management insights.
 - Optionally syncs the current/historical Octopus gas unit tariff into Tado Energy IQ.
 - Set up once, and it runs weekly via GitHub Actions.
