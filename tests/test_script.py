@@ -5,6 +5,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from sync_octopus_tado import (
+    backfill_consumption,
     call_tado_method,
     get_tado_last_tariff_checkpoint,
     get_consumption_since_date,
@@ -313,3 +314,141 @@ def test_parse_args_update_tariff_flag():
 
     assert args.update_tariff is True
     assert args.octopus_account_number == "A-12345"
+
+
+def test_parse_args_backfill_flag():
+    test_argv = [
+        "sync_octopus_tado.py",
+        "--tado-email",
+        "user@example.com",
+        "--tado-password",
+        "secret",
+        "--mprn",
+        "123456789",
+        "--gas-serial-number",
+        "GAS123",
+        "--octopus-api-key",
+        "fake-api-key",
+        "--octopus-account-number",
+        "A-12345",
+        "--backfill",
+    ]
+
+    with patch.object(sys, "argv", test_argv):
+        args = parse_args()
+
+    assert args.backfill is True
+    assert args.octopus_account_number == "A-12345"
+
+
+def test_parse_args_backfill_flag_defaults_false():
+    test_argv = [
+        "sync_octopus_tado.py",
+        "--tado-email",
+        "user@example.com",
+        "--tado-password",
+        "secret",
+        "--mprn",
+        "123456789",
+        "--gas-serial-number",
+        "GAS123",
+        "--octopus-api-key",
+        "fake-api-key",
+    ]
+
+    with patch.object(sys, "argv", test_argv):
+        args = parse_args()
+
+    assert args.backfill is False
+
+
+@patch("sync_octopus_tado.sync_octopus_tariffs_to_tado")
+@patch("sync_octopus_tado.get_octopus_daily_consumption")
+@patch("sync_octopus_tado.get_tado_last_meter_reading")
+def test_backfill_consumption_resumes_from_last_reading(
+    mock_last_reading,
+    mock_daily_consumption,
+    mock_sync_tariffs,
+):
+    """Backfill picks up from the last Tado reading and sends cumulative totals."""
+    mock_last_reading.return_value = (100.0, "2025-01-01")
+    mock_daily_consumption.return_value = [
+        {"interval_end": "2025-01-02T00:00:00Z", "consumption": 2.0},
+        {"interval_end": "2025-01-03T00:00:00Z", "consumption": 3.0},
+    ]
+
+    mock_tado = MagicMock()
+    mock_tado.set_eiq_meter_readings.return_value = {"status": "ok"}
+
+    backfill_consumption(
+        mock_tado,
+        "fake-api-key",
+        "A-12345",
+        "123456789",
+        "GAS123",
+        today=date(2025, 1, 3),
+    )
+
+    # Expect two readings: 102 (100+2) and 105 (102+3)
+    calls = mock_tado.set_eiq_meter_readings.call_args_list
+    assert len(calls) == 2
+    assert calls[0].kwargs == {"reading": 102, "date": "2025-01-02"}
+    assert calls[1].kwargs == {"reading": 105, "date": "2025-01-03"}
+
+
+@patch("sync_octopus_tado.sync_octopus_tariffs_to_tado")
+@patch("sync_octopus_tado.get_octopus_daily_consumption")
+@patch("sync_octopus_tado.get_tado_last_meter_reading")
+def test_backfill_consumption_already_up_to_date(
+    mock_last_reading,
+    mock_daily_consumption,
+    mock_sync_tariffs,
+):
+    """Backfill does nothing when Tado already has a reading for today."""
+    mock_last_reading.return_value = (100.0, "2025-01-03")
+
+    mock_tado = MagicMock()
+
+    backfill_consumption(
+        mock_tado,
+        "fake-api-key",
+        "A-12345",
+        "123456789",
+        "GAS123",
+        today=date(2025, 1, 3),
+    )
+
+    mock_tado.set_eiq_meter_readings.assert_not_called()
+    mock_daily_consumption.assert_not_called()
+
+
+@patch("sync_octopus_tado.sync_octopus_tariffs_to_tado")
+@patch("sync_octopus_tado.get_octopus_daily_consumption")
+@patch("sync_octopus_tado.get_tado_last_meter_reading")
+def test_backfill_consumption_skips_days_without_data(
+    mock_last_reading,
+    mock_daily_consumption,
+    mock_sync_tariffs,
+):
+    """Backfill skips days for which Octopus has no consumption data."""
+    mock_last_reading.return_value = (50.0, "2025-01-01")
+    # Only one of the two days has data
+    mock_daily_consumption.return_value = [
+        {"interval_end": "2025-01-03T00:00:00Z", "consumption": 5.0},
+    ]
+
+    mock_tado = MagicMock()
+    mock_tado.set_eiq_meter_readings.return_value = {"status": "ok"}
+
+    backfill_consumption(
+        mock_tado,
+        "fake-api-key",
+        "A-12345",
+        "123456789",
+        "GAS123",
+        today=date(2025, 1, 3),
+    )
+
+    calls = mock_tado.set_eiq_meter_readings.call_args_list
+    assert len(calls) == 1
+    assert calls[0].kwargs == {"reading": 55, "date": "2025-01-03"}

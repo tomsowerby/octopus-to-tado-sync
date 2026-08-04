@@ -296,6 +296,121 @@ def sync_octopus_tariffs_to_tado(
     return synced_periods
 
 
+def get_octopus_daily_consumption(api_key, mprn, gas_serial_number, period_from):
+    """
+    Retrieves daily gas consumption records from Octopus Energy since period_from.
+
+    Returns a list of dicts with 'interval_end' and 'consumption' keys, ordered
+    chronologically.
+    """
+    url = (
+        f"https://api.octopus.energy/v1/gas-meter-points/{mprn}/meters/"
+        f"{gas_serial_number}/consumption/?group_by=day&order_by=period"
+        f"&period_from={period_from.isoformat()}Z"
+    )
+    return fetch_paginated_results(url, api_key)
+
+
+def backfill_consumption(
+    tado,
+    api_key,
+    account_number,
+    mprn,
+    gas_serial_number,
+    today=None,
+):
+    """
+    Backfill consumption readings and unit rates into Tado day by day.
+
+    For each calendar day from the day after the last Tado meter reading up to
+    today, this function:
+      1. Sends a cumulative consumption reading to Tado.
+      2. Syncs any outstanding Octopus tariff periods to Tado.
+
+    The cumulative total is seeded from the last reading already stored in Tado
+    (if any), then incremented by each day's consumption from Octopus.
+
+    Args:
+        today: Override today's date (used in tests). Defaults to date.today().
+    """
+    if today is None:
+        today = date.today()
+
+    last_tado_reading, last_tado_date = get_tado_last_meter_reading(tado)
+
+    if last_tado_reading is not None and last_tado_date is not None:
+        start_date = parse_api_date(last_tado_date) + timedelta(days=1)
+        cumulative_total = float(last_tado_reading)
+        print(
+            f"Resuming backfill from {start_date.isoformat()} "
+            f"(last Tado reading: {cumulative_total})"
+        )
+    else:
+        # No existing reading — start from three years ago with a zero base
+        start_date = today - timedelta(days=1095)
+        cumulative_total = 0.0
+        print(
+            f"No existing Tado reading found; backfilling from {start_date.isoformat()}"
+        )
+
+    if start_date > today:
+        print("Tado is already up to date; nothing to backfill.")
+        return
+
+    # Fetch all daily consumption records since start_date in one go
+    period_from = datetime(start_date.year, start_date.month, start_date.day, 0, 0, 0)
+    daily_records = get_octopus_daily_consumption(
+        api_key, mprn, gas_serial_number, period_from
+    )
+
+    # Index records by date for quick look-up
+    consumption_by_date = {}
+    for record in daily_records:
+        record_date = parse_api_date(record["interval_end"])
+        consumption_by_date[record_date] = record["consumption"]
+
+    print(
+        f"Fetched {len(daily_records)} daily consumption records from Octopus "
+        f"(from {start_date.isoformat()} to {today.isoformat()})"
+    )
+
+    # Sync tariff periods before sending readings
+    if account_number:
+        try:
+            sync_octopus_tariffs_to_tado(
+                tado, api_key, account_number, mprn, gas_serial_number
+            )
+        except Exception as e:
+            print(f"Tariff sync failed during backfill: {e}")
+
+    # Walk day by day and send a cumulative reading for each day that has data
+    current_date = start_date
+    days_sent = 0
+    while current_date <= today:
+        day_consumption = consumption_by_date.get(current_date)
+        if day_consumption is not None:
+            cumulative_total += day_consumption
+            reading_date = current_date.isoformat()
+            try:
+                result = call_tado_method(
+                    tado,
+                    "set_eiq_meter_readings",
+                    "setEIQMeterReadings",
+                    reading=int(round(cumulative_total)),
+                    date=reading_date,
+                )
+                print(
+                    f"Sent reading for {reading_date}: "
+                    f"day={day_consumption:.4f}, total={cumulative_total:.4f} -> {result}"
+                )
+                days_sent += 1
+            except Exception as e:
+                print(f"Error sending reading for {reading_date}: {e}")
+        current_date += timedelta(days=1)
+
+    print(f"Backfill complete. {days_sent} readings sent to Tado.")
+
+
 def get_tado_last_meter_reading(tado):
     """
     Retrieves the last meter reading that was sent to Tado.
@@ -557,6 +672,16 @@ def parse_args():
         action="store_true",
         help="Also sync Octopus gas tariff periods to Tado Energy IQ.",
     )
+    parser.add_argument(
+        "--backfill",
+        action="store_true",
+        help=(
+            "Backfill consumption readings into Tado day by day, starting from the "
+            "day after the last reading already stored in Tado up to today. "
+            "Also syncs Octopus tariff periods when --octopus-account-number is provided. "
+            "Replaces the previous backfill_by_day.py script."
+        ),
+    )
 
     return parser.parse_args()
 
@@ -564,8 +689,19 @@ def parse_args():
 def main():
     args = parse_args()
 
-    # First, authenticate with Tado to retrieve the last reading
+    # First, authenticate with Tado
     tado = tado_login(args.tado_email, args.tado_password)
+
+    if args.backfill:
+        print("Starting day-by-day backfill...")
+        backfill_consumption(
+            tado,
+            args.octopus_api_key,
+            args.octopus_account_number,
+            args.mprn,
+            args.gas_serial_number,
+        )
+        return
 
     # Get total consumption from Octopus Energy API
     # This will use delta sync if possible, falling back to 2-year window
